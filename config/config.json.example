@@ -20,15 +20,15 @@
         },
         "vLiveId": {
             "value": "your-vlive-id-here",
-            "comment": "REALITY App vLive ID (get from browser developer tools)"
+            "comment": "REALITY App vLive ID"
         },
         "gid": {
             "value": "your-gid-here",
-            "comment": "REALITY App GID (get from browser developer tools)"
+            "comment": "REALITY App GID"
         },
         "auth": {
             "value": "Bearer your-auth-token-here",
-            "comment": "REALITY App authorization token (get from browser developer tools)"
+            "comment": "REALITY App authorization token"
         }
     },
     "health": {
