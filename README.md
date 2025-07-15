@@ -183,15 +183,6 @@ Modify `config/presets.json`:
 }
 ```
 
-### Environment Variables
-
-You can also use environment variables:
-
-```bash
-export RTAR_OPENAI_API_KEY="your-key"
-export RTAR_REALITY_MEDIA_ID="123456"
-```
-
 ## 🐛 Troubleshooting
 
 ### Common Issues
@@ -210,14 +201,6 @@ export RTAR_REALITY_MEDIA_ID="123456"
 - Validate OpenAI API key
 - Check API rate limits
 - Verify model availability
-
-### Debug Mode
-
-Enable debug mode for detailed logging:
-
-```bash
-export RTAR_DEBUG=true
-```
 
 ## 📊 Monitoring
 
