@@ -19,7 +19,7 @@ This directory contains all configuration files for RTAR. You can customize thes
 ### REALITY App Settings
 Configure your REALITY App connection:
 - `mediaId`: Target live stream ID
-- `vLiveId`, `gid`, `auth`: Get these from browser developer tools
+- `vLiveId`, `gid`, `auth`: Get these from network packet capture tools
 
 ### OpenAI Settings
 Set up your AI provider:
@@ -43,20 +43,30 @@ Customize bot behavior:
 
 ### REALITY App Credentials
 
-**TO BE DONE**
-1. Open REALITY App in browser
-2. Press F12 to open developer tools
-3. Go to Network tab
-4. Look for WebSocket connections
-5. Find headers: `X-WFLE-vLiveID`, `X-WFLE-GID`, `Authorization`
-**TO BE DONE**
+1. Use network packet capture tools (such as Wireshark, Reqable, Fiddler, etc.)
+2. Start packet capture and open REALITY App
+3. Enter the target live stream room
+4. Look for WebSocket connection requests in the capture logs
+5. Extract the following parameters from request headers:
+   - `X-WFLE-vLiveID` → `vLiveId`
+   - `X-WFLE-GID` → `gid`
+   - `Authorization` → `auth`
+6. Fill these values into the config.json configuration file
 
 ### ADB Setup
 1. Enable USB debugging on Android device
 2. Connect via USB and run: `adb tcpip 5555`
 3. Find device IP: `adb shell ip route`
 4. Connect wirelessly: `adb connect DEVICE_IP:5555`
-5. Calibrate coordinates using: `adb shell input tap x y`
+5. Enable pointer location to help with coordinate calibration:
+   ```bash
+   adb shell settings put system pointer_location 1
+   ```
+6. Calibrate coordinates using: `adb shell input tap x y`
+7. Disable pointer location when done:
+   ```bash
+   adb shell settings put system pointer_location 0
+   ```
 
 ## 🔍 Troubleshooting
 
@@ -70,14 +80,6 @@ Enable debug mode in config.json to see detailed logs:
 ```json
 "debug": {"value": true}
 ```
-
-## 📝 Best Practices
-
-1. **Always backup** your working configuration
-2. **Test changes** in a controlled environment first
-3. **Document customizations** for future reference
-4. **Use environment variables** for sensitive data in production
-5. **Regular updates** when REALITY App changes their API
 
 ## 🚀 Quick Start
 
