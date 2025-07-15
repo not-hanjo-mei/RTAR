@@ -1,0 +1,84 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Configuration files with sensitive data
+config/config.json
+config/character.md
+config/filter_list.json
+config/presets.json
+*.key
+*.pem
+*.crt
+
+# Logs
+*.log
+logs/
+
+# Runtime files
+*.pid
+*.lock
+
+# Testing
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ADB
+*.adb
+
+# Temporary files
+tmp/
+temp/
+
+# Other
+PROJECT_PLANS.md
+RTAR.code-workspace
+future-plans.md
+justSomeNotes.py

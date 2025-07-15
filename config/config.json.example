@@ -1,0 +1,124 @@
+{
+    "debug": {
+        "value": false,
+        "comment": "Enable debug mode for detailed logging"
+    },
+    "performance": {
+        "maxWorkers": {
+            "value": 4,
+            "comment": "Thread pool size for message processing (4-12 recommended)"
+        },
+        "responseTimeout": {
+            "value": 30,
+            "comment": "Maximum time to wait for AI response generation (seconds)"
+        }
+    },
+    "reality": {
+        "mediaId": {
+            "value": 123456789,
+            "comment": "REALITY App live stream media ID (replace with your target)"
+        },
+        "vLiveId": {
+            "value": "your-vlive-id-here",
+            "comment": "REALITY App vLive ID (get from browser developer tools)"
+        },
+        "gid": {
+            "value": "your-gid-here",
+            "comment": "REALITY App GID (get from browser developer tools)"
+        },
+        "auth": {
+            "value": "Bearer your-auth-token-here",
+            "comment": "REALITY App authorization token (get from browser developer tools)"
+        }
+    },
+    "health": {
+        "activityTimeout": {
+            "value": 10,
+            "comment": "Timeout before considering connection inactive (seconds)"
+        }
+    },
+    "openai": {
+        "apiKey": {
+            "value": "sk-W0rpStc95T7JVYVwDYc29IyirjtpPPby6SozFMQr17m8KWeo",
+            "comment": "API key from suanli.cn - free QwQ-32B access"
+        },
+        "apiBase": {
+            "value": "https://api.suanli.cn/v1",
+            "comment": "API endpoint from suanli.cn - free QwQ-32B access"
+        },
+        "model": {
+            "value": "free:QwQ-32B",
+            "comment": "QwQ-32B model from suanli.cn - free tier"
+        },
+        "temperature": {
+            "value": 0.7,
+            "comment": "AI response creativity (0.0-2.0, lower = more focused)"
+        }
+    },
+    "bot": {
+        "commandLines": {
+            "value": 3,
+            "comment": "Number of lines reserved for command input display"
+        },
+        "responseRate": {
+            "value": 0.9,
+            "comment": "Probability of responding to messages (0.0-1.0)"
+        },
+        "contextLength": {
+            "value": 25,
+            "comment": "Number of recent messages to use as context"
+        },
+        "initialHistoryCutoff": {
+            "value": 5,
+            "comment": "Ignore messages older than this after connection (seconds)"
+        },
+        "myNickname": {
+            "value": "AI Assistant",
+            "comment": "Bot display name in chat"
+        }
+    },
+    "adb": {
+        "host": {
+            "value": "127.0.0.1",
+            "comment": "ADB server host (usually 127.0.0.1 for local)"
+        },
+        "port": {
+            "value": "5555",
+            "comment": "ADB server port (usually 5555)"
+        },
+        "inputBox": {
+            "x": {
+                "value": 75,
+                "comment": "X coordinate of chat input box (calibrate for your device)"
+            },
+            "y": {
+                "value": 1130,
+                "comment": "Y coordinate of chat input box (calibrate for your device)"
+            }
+        },
+        "sendButton": {
+            "x": {
+                "value": 620,
+                "comment": "X coordinate of send button (calibrate for your device)"
+            },
+            "y": {
+                "value": 1175,
+                "comment": "Y coordinate of send button (calibrate for your device)"
+            }
+        },
+        "autoSend": {
+            "value": true,
+            "comment": "Automatically send AI responses (true/false)"
+        },
+        "sendDelay": {
+            "min": {
+                "value": 1.5,
+                "comment": "Minimum delay before auto-sending (seconds)"
+            },
+            "max": {
+                "value": 4.0,
+                "comment": "Maximum delay before auto-sending (seconds)"
+            }
+        }
+    }
+}

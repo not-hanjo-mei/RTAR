@@ -1,0 +1,12 @@
+{
+  "filters": {
+    "blocked_vlive_ids": [
+      "#include#your_bot_vlive_id_here",
+      "example_vlive_id_1",
+      "example_vlive_id_2"
+    ]
+  },
+  "comments": {
+    "blocked_vlive_ids": "List of vlive_id values that should not receive AI responses. The first one should be your own vlive_id to prevent responding to your own messages."
+  }
+}

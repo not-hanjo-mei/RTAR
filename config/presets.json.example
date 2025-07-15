@@ -1,0 +1,52 @@
+{
+    "join": {
+        "description": "When a user joins the live stream",
+        "replies": [
+            "Welcome {username} to the stream! 👋",
+            "Hey {username}, glad you're here!",
+            "Hello {username}, welcome aboard!",
+            "{username} just joined the party! 🎉",
+            "Welcome {username}, enjoy the show!"
+        ]
+    },
+    "like": {
+        "description": "When a user likes the stream",
+        "replies": [
+            "Thanks for the like, {username}! ❤️",
+            "Appreciate it, {username}!",
+            "{username} liked the stream!",
+            "Thanks {username}, much appreciated!",
+            "Love seeing those likes, thanks {username}!"
+        ]
+    },
+    "follow": {
+        "description": "When a user follows the stream",
+        "replies": [
+            "Thanks for the follow, {username}! 🎊",
+            "Welcome to the community, {username}!",
+            "{username} is now following, awesome!",
+            "Thanks for joining us, {username}!",
+            "Follow appreciated, {username}!"
+        ]
+    },
+    "gift": {
+        "description": "When a user sends a gift",
+        "replies": [
+            "Wow, thanks for the gift, {username}! 🎁",
+            "Incredibly generous, {username}!",
+            "{username} just sent a gift! Amazing!",
+            "Thank you so much, {username}!",
+            "Your support means everything, {username}!"
+        ]
+    },
+    "comment": {
+        "description": "Generic responses for user comments",
+        "replies": [
+            "Great point, {username}!",
+            "I agree with you, {username}!",
+            "Thanks for sharing, {username}!",
+            "Interesting perspective, {username}!",
+            "Love hearing from you, {username}!"
+        ]
+    }
+}
