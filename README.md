@@ -16,34 +16,35 @@ AI-powered automated chat responses for REALITY App live streams.
 ## 📁 Project Structure
 
 ```
-REALITY-Auto-Reply/
+RTAR/
 ├── main.py                 # Main application entry point
 ├── requirements.txt        # Python dependencies
-├── START.bat             # Windows startup script
-├── config/               # Configuration files
-│   ├── config.json       # Main configuration
-│   ├── presets.json      # Preset response templates
-│   └── character.md      # AI personality definition
-├── src/                  # Source code
-│   ├── core/            # Core functionality
+├── START.bat              # Windows startup script
+├── START.sh               # Linux/macOS startup script
+├── config/                # Configuration files
+│   ├── config.json        # Main configuration
+│   ├── presets.json       # Preset response templates
+│   └── character.md       # AI personality definition
+├── src/                   # Source code
+│   ├── core/             # Core functionality
 │   │   ├── config_manager.py
 │   │   ├── websocket_client.py
 │   │   ├── message_processor.py
 │   │   └── response_generator.py
-│   ├── models/          # Data models
+│   ├── models/           # Data models
 │   │   ├── message.py
 │   │   └── config_models.py
-│   ├── utils/           # Utility modules
+│   ├── utils/            # Utility modules
 │   │   ├── adb_controller.py
 │   │   ├── preset_manager.py
 │   │   ├── character_loader.py
-│   │   └── url_parser.py
-│   └── handlers/        # Command handlers
+│   │   ├── url_parser.py
+│   │   └── user_filter.py
+│   └── handlers/         # Command handlers
 │       ├── command_handler.py
 │       └── input_handler.py
-├── tests/               # Test files
-├── docs/               # Documentation
-└── assets/             # Additional assets
+├── tests/                # Test files
+└── .gitignore            # Git ignore rules
 ```
 
 ## 🛠️ Installation
@@ -84,24 +85,36 @@ REALITY-Auto-Reply/
 ```json
 {
   "reality": {
-    "mediaId": 123456789,           // Target live stream ID
-    "vLiveId": "your-vlive-id",     // Your REALITY vLive ID
-    "gid": "your-gid",             // Group ID
-    "auth": "Bearer your-token"    // Authentication token
+    "mediaId": 123456789,
+    "vLiveId": "your-vlive-id",
+    "gid": "your-gid",
+    "auth": "Bearer your-token"
   },
   "openai": {
-    "apiKey": "your-openai-key",    // OpenAI API key
+    "apiKey": "your-openai-key",
     "apiBase": "https://api.openai.com/v1",
-    "model": "gpt-4o",         // Model to use
+    "model": "gpt-4o",
     "temperature": 0.7
   },
   "bot": {
-    "myNickname": "RTAT Assistant",         // Bot display name
-    "responseRate": 1.0,            // Response probability (0-1)
-    "contextLength": 20             // Context message count
+    "myNickname": "RTAT Assistant",
+    "responseRate": 1.0,
+    "contextLength": 20
   }
 }
 ```
+
+**Configuration Notes:**
+- `mediaId`: Target live stream ID
+- `vLiveId`: Your REALITY vLive ID
+- `gid`: Group ID
+- `auth`: Authentication token (Bearer format)
+- `apiKey`: Your OpenAI API key
+- `model`: AI model to use (gpt-4o, gpt-4o-mini, etc.)
+- `temperature`: Response creativity (0.0-1.0)
+- `myNickname`: Bot display name in chat
+- `responseRate`: Probability of responding (0.0-1.0)
+- `contextLength`: Number of messages to keep for context
 
 ## 🎯 Usage
 
