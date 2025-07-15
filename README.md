@@ -49,22 +49,14 @@ REALITY-Auto-Reply/
 ## 🛠️ Installation
 
 ### Prerequisites
-- Python 3.7 or higher
+- Python 3.12 or higher
 - ADB (Android Debug Bridge) installed and configured
-- REALITY App installed on your Android device
+- REALITY App installed on your Android device / emulator
 
 ### Quick Setup
 
 1. **Clone/Download the project**
-2. **Run the startup script**:
-   ```bash
-   # Windows
-   double-click START.bat
-   
-   # Linux/Mac
-   python main.py
-   ```
-
+2. **Run the startup script**
 3. **Install dependencies** (automatic on first run):
    ```bash
    pip install -r requirements.txt
