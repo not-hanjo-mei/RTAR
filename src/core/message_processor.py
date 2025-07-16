@@ -23,7 +23,7 @@ from ..utils.character_loader import CharacterLoader
 class MessageProcessor:
     """Processes incoming messages and generates responses."""
     
-    def __init__(self, config_manager: ConfigManager, response_generator: ResponseGenerator, character_loader: CharacterLoader = None):
+    def __init__(self, config_manager: ConfigManager, response_generator: ResponseGenerator, character_loader: Optional[CharacterLoader] = None):
         """Initialize message processor."""
         self.config = config_manager
         self.response_generator = response_generator
@@ -176,9 +176,9 @@ class MessageProcessor:
                 self.logger.debug(f"Skipping blocked user: {message.vlive_id}")
                 return False
         
-        # Skip history messages
+        # Skip history messages - Apply to ALL message types including interaction messages
         if message.timestamp < initial_cutoff_time:
-            self.logger.debug(f"Skipping history message: {message.timestamp} < {initial_cutoff_time}")
+            self.logger.debug(f"Skipping history message: {message.timestamp} < {initial_cutoff_time} (type: {message.content_type})")
             return False
         
         # Skip system messages
