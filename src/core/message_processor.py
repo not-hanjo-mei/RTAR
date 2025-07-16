@@ -91,6 +91,32 @@ class MessageProcessor:
     
     def set_connection_time(self, connection_time: float):
         """Set the connection time for history cutoff."""
+        # Clear old interaction data when reconnecting to prevent duplicates
+        self.logger.info("Clearing old message processing state for new connection...")
+        old_count = len(self.processed_messages)
+        
+        # Keep only very recent messages (last 5 minutes) to prevent reconnection duplicates
+        cutoff_time = connection_time - 300  # 5 minutes ago
+        keys_to_remove = []
+        
+        for key in self.processed_messages:
+            if isinstance(key, str) and '_' in key:
+                try:
+                    # Parse timestamp from interaction keys
+                    parts = key.split('_')
+                    if len(parts) >= 3 and parts[-1].isdigit():
+                        key_time = int(parts[-1]) * 30  # Convert back from 30-second windows
+                        if key_time < cutoff_time:
+                            keys_to_remove.append(key)
+                except (ValueError, IndexError):
+                    keys_to_remove.append(key)  # Remove malformed keys
+        
+        for key in keys_to_remove:
+            self.processed_messages.discard(key)
+        
+        new_count = len(self.processed_messages)
+        self.logger.info(f"Cleaned up {old_count - new_count} old processed message keys")
+        
         self.connection_time = connection_time
     
     def _process_messages(self):
@@ -201,8 +227,25 @@ class MessageProcessor:
         if not interaction_type:
             return False
         
+        # Skip if this message ID has already been processed
+        if message.msg_id in self.processed_messages:
+            self.logger.debug(f"Skipping already processed message by ID: {message.msg_id}")
+            return False
+            
+        # Check for duplicate interaction within time window
+        if self._is_duplicate_interaction(message, interaction_type):
+            self.logger.debug(f"Skipping duplicate {interaction_type} from {message.name} within time window")
+            return False
+        
         response = self.preset_manager.get_preset_response(interaction_type, message.name)
         if response:
+            # Mark as processed using multiple keys for robust deduplication
+            time_window = int(message.timestamp / 30)
+            duplicate_key = f"{interaction_type}_{message.vlive_id}_{time_window}"
+            
+            self.processed_messages.add(message.msg_id)
+            self.processed_messages.add(duplicate_key)
+            
             self._log_message(f"[Preset]{self.config.get_value('bot.myNickname', 'AI')}: {response}")
             
             if self.config.get_value('adb.autoSend', True):
@@ -297,6 +340,17 @@ class MessageProcessor:
         self.processed_messages.clear()
         self.processed_content.clear()
         self.recent_context.clear()
+        
+    def _is_duplicate_interaction(self, message: MessageItem, interaction_type: str) -> bool:
+        """Check if this interaction is a duplicate based on user and time window."""
+        if not message.vlive_id:
+            return False
+            
+        # Create a time-based key for deduplication (within 30 seconds)
+        time_window = int(message.timestamp / 30)  # 30-second window
+        duplicate_key = f"{interaction_type}_{message.vlive_id}_{time_window}"
+        
+        return duplicate_key in self.processed_messages
     
     def get_stats(self) -> dict:
         """Get processing statistics."""
