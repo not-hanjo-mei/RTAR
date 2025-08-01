@@ -32,8 +32,11 @@ class ADBController:
         self.send_y = self.config.get_value('adb.sendButton.y', 0)
     
     def connect(self) -> bool:
-        """Connect to ADB device."""
+        """(Re)Connect to ADB device."""
         try:
+            # Disconnect first to ensure clean connection
+            self.disconnect()
+            
             cmd = f"adb connect {self.device_address}"
             result = subprocess.run(
                 cmd,
@@ -103,20 +106,20 @@ class ADBController:
         """Send short text (under 90 chars)."""
         try:
             # Click input box
-            if not self._adb_command(f"shell input tap {self.input_x} {self.input_y}"):
+            if not self.adb_command(f"shell input tap {self.input_x} {self.input_y}"):
                 return False
             
             time.sleep(0.3)
             
             # Send text via broadcast
             text_b64 = base64.b64encode(text.encode('utf-8')).decode('utf-8')
-            if not self._adb_command(f'shell am broadcast -a ADB_INPUT_B64 --es msg "{text_b64}"'):
+            if not self.adb_command(f'shell am broadcast -a ADB_INPUT_B64 --es msg "{text_b64}"'):
                 return False
             
             time.sleep(0.3)
             
             # Click send button
-            if not self._adb_command(f"shell input tap {self.send_x} {self.send_y}"):
+            if not self.adb_command(f"shell input tap {self.send_x} {self.send_y}"):
                 return False
             
             return True
@@ -168,7 +171,7 @@ class ADBController:
         
         return parts
     
-    def _adb_command(self, command: str) -> bool:
+    def adb_command(self, command: str) -> bool:
         """Execute ADB command."""
         try:
             full_cmd = f"adb -s {self.device_address} {command}"

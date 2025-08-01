@@ -50,6 +50,7 @@ class CommandHandler:
             '/reload': self.handle_reload,
             '/disconnect': self.handle_disconnect,
             '/reconnect': self.handle_reconnect,
+            '/status': self.handle_status,
             '/character': self.handle_character,
             '/presets': self.handle_presets,
             '/debug': self.handle_debug,
@@ -91,7 +92,8 @@ RTAR Commands:
   /config              - Show current configuration
   /reload              - Reload configuration and reconnect
   /disconnect          - Disconnect WebSocket
-  /reconnect           - Reconnect WebSocket
+  /reconnect [reset]   - Reconnect WebSocket (use 'reset' to reset reconnection state)
+  /status              - Show WebSocket connection and reconnection status
   /character [text]    - Show/set character personality
   /presets             - Show preset responses
   /debug               - Show debug mode status
@@ -263,9 +265,40 @@ ADB:
     
     def handle_reconnect(self, args: str = ""):
         """Reconnect WebSocket."""
-        self._output("Reconnecting WebSocket...")
-        self.ws_client.reconnect()
-    
+        if args.strip().lower() == "reset":
+            # Reset reconnect state
+            self.ws_client.reset_reconnect_state()
+            self._output("Reconnection state reset, auto-reconnect re-enabled")
+        else:
+            # Manual reconnect
+            status = self.ws_client.get_reconnect_status()
+            if not status['auto_reconnect_enabled'] and status['reconnect_attempts'] >= status['max_reconnect_attempts']:
+                self._output("Reached maximum reconnect attempts. Use 'reconnect reset' to reset reconnect state, or try reconnecting manually...")
+            
+            self._output("Trying to reconnect WebSocket...")
+            if self.ws_client.reconnect():
+                self._output("Reconnection successful")
+            else:
+                self._output("Reconnection failed")
+
+    def handle_status(self, args: str = ""):
+        """Show WebSocket connection and reconnection status."""
+        status = self.ws_client.get_reconnect_status()
+        
+        connection_status = "Connected" if status['is_connected'] else "Disconnected"
+        auto_reconnect_status = "Enabled" if status['auto_reconnect_enabled'] else "Disabled"
+        reconnecting_status = "Yes" if status['is_reconnecting'] else "No"
+        
+        self._output(f"WebSocket Status:")
+        self._output(f"  Connection Status: {connection_status}")
+        self._output(f"  Reconnect Attempts: {status['reconnect_attempts']}/{status['max_reconnect_attempts']}")
+        self._output(f"  Auto Reconnect: {auto_reconnect_status}")
+        self._output(f"  Reconnecting: {reconnecting_status}")
+
+        if not status['auto_reconnect_enabled']:
+            self._output("  Note: Reached maximum reconnect attempts, auto-reconnect disabled")
+            self._output("  Use 'reconnect reset' to re-enable auto-reconnect")
+
     def handle_character(self, args: str = ""):
         """Handle character personality commands."""
         if args:

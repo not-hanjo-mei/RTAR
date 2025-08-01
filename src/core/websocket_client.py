@@ -26,8 +26,17 @@ class WebSocketClient:
         self.reconnect_attempts = 0
         self.max_reconnect_attempts = 5
         self.reconnect_base_delay = 2
+        self.reconnect_delays = [2, 4, 8, 16, 32]
         self.reconnect_lock = threading.Lock()
         self.is_reconnecting = False
+        self.auto_reconnect_enabled = True
+        self.connection_stable_time = 0 
+        self.stable_connection_threshold = 10  # Threshold for stable connection in seconds
+        
+        # Permanent error codes that should stop auto-reconnect
+        self.permanent_error_codes = {
+            4003  # Chatroom has not opened
+        }
         
         # Logger
         self.logger = logging.getLogger(__name__)
@@ -104,16 +113,37 @@ class WebSocketClient:
         if self.on_disconnect_callback:
             self.on_disconnect_callback(str(close_status_code), close_msg)
         
-        # Trigger reconnection
-        threading.Thread(target=self._delayed_reconnect, daemon=True).start()
+        # Check for permanent error codes
+        if close_status_code in self.permanent_error_codes:
+            self.logger.warning(f"Detected permanent error code {close_status_code}: {close_msg}")
+            self.logger.warning("This is a permanent error, stopping auto-reconnect")
+            self.auto_reconnect_enabled = False
+            return
+
+        # Check if the connection is stable enough (to avoid immediate reconnection)
+        if hasattr(self, 'connection_time') and self.connection_time > 0:
+            connection_duration = time.time() - self.connection_time
+            if connection_duration < self.stable_connection_threshold:
+                self.logger.warning(f"Connection duration too short ({connection_duration:.1f} seconds), potential issues detected")
+                # For unstable connections, we still attempt to reconnect but increase the reconnect count
+                self.reconnect_attempts += 1
+
+        # Trigger auto-reconnect if enabled
+        if self.auto_reconnect_enabled and self.reconnect_attempts < self.max_reconnect_attempts:
+            threading.Thread(target=self._delayed_reconnect, daemon=True).start()
+        elif self.reconnect_attempts >= self.max_reconnect_attempts:
+            self.logger.warning(f"Reached maximum reconnect attempts ({self.max_reconnect_attempts}), stopping auto-reconnect")
+            self.auto_reconnect_enabled = False
     
     def _on_open(self, ws):
         """Handle WebSocket connection open."""
         self.is_connected = True
         self.connection_time = time.time()
         self.last_activity = time.time()
-        self.reconnect_attempts = 0
         self.logger.info("WebSocket connection established")
+        
+        # Start a timer to reset reconnect attempts after stable connection
+        threading.Timer(self.stable_connection_threshold, self._reset_reconnect_on_stable_connection).start()
         
         if self.on_connect_callback:
             self.on_connect_callback()
@@ -126,9 +156,24 @@ class WebSocketClient:
         """Handle pong messages."""
         self.last_activity = time.time()
     
+    def _reset_reconnect_on_stable_connection(self):
+        """Reset reconnect attempts counter, only called when connection is stable."""
+        if self.is_connected:
+            old_attempts = self.reconnect_attempts
+            self.reconnect_attempts = 0
+            self.auto_reconnect_enabled = True
+            if old_attempts > 0:
+                self.logger.info(f"Connection stable for {self.stable_connection_threshold} seconds, resetting reconnect attempts (previous: {old_attempts})")
+
     def _delayed_reconnect(self):
-        """Delay before attempting reconnection."""
-        time.sleep(1)
+        """Delay reconnection using specified intervals."""
+        if self.reconnect_attempts < len(self.reconnect_delays):
+            delay = self.reconnect_delays[self.reconnect_attempts]
+        else:
+            delay = self.reconnect_delays[-1]  # Use the last interval time
+
+        self.logger.info(f"Waiting {delay} seconds before attempting reconnect #{self.reconnect_attempts + 1}...")
+        time.sleep(delay)
         self.reconnect()
     
     def connect(self) -> bool:
@@ -197,24 +242,29 @@ class WebSocketClient:
             self.is_reconnecting = True
         
         try:
+            # Check if maximum reconnect attempts reached
+            if self.reconnect_attempts >= self.max_reconnect_attempts:
+                self.logger.warning(f"Reached maximum reconnect attempts ({self.max_reconnect_attempts}), stopping reconnect")
+                self.auto_reconnect_enabled = False
+                return False
+            
             self.disconnect()
+
+            # Increase reconnect attempts
+            self.reconnect_attempts += 1
+            self.logger.info(f"Attempting reconnect #{self.reconnect_attempts}/{self.max_reconnect_attempts}...")
             
-            while (self.reconnect_attempts < self.max_reconnect_attempts and 
-                   not self.is_connected):
-                
-                delay = min(
-                    self.reconnect_base_delay * (2 ** self.reconnect_attempts),
-                    60
-                )
-                
-                self.reconnect_attempts += 1
-                time.sleep(delay)
-                
-                if self.connect():
-                    self.reconnect_attempts = 0
-                    return True
-            
-            return False
+            # Try to connect
+            if self.connect():
+                self.logger.info("Reconnected successfully")
+                # Don't reset reconnect attempts immediately, wait for stable connection
+                return True
+            else:
+                self.logger.warning(f"Reconnection attempt #{self.reconnect_attempts} failed")
+                if self.reconnect_attempts >= self.max_reconnect_attempts:
+                    self.logger.error("Reached maximum reconnect attempts, stopping auto-reconnect")
+                    self.auto_reconnect_enabled = False
+                return False
             
         finally:
             with self.reconnect_lock:
@@ -237,3 +287,21 @@ class WebSocketClient:
         
         activity_timeout = self.config.get_value('health.activityTimeout', 10)
         return (time.time() - self.last_activity) <= activity_timeout
+    
+    def reset_reconnect_state(self):
+        """Reset reconnect state and re-enable auto-reconnect."""
+        with self.reconnect_lock:
+            self.reconnect_attempts = 0
+            self.auto_reconnect_enabled = True
+            self.is_reconnecting = False
+        self.logger.info("Reconnection state reset, auto-reconnect re-enabled")
+    
+    def get_reconnect_status(self) -> dict:
+        """Get reconnect status information."""
+        return {
+            'reconnect_attempts': self.reconnect_attempts,
+            'max_reconnect_attempts': self.max_reconnect_attempts,
+            'auto_reconnect_enabled': self.auto_reconnect_enabled,
+            'is_reconnecting': self.is_reconnecting,
+            'is_connected': self.is_connected
+        }
