@@ -246,7 +246,7 @@ class MessageProcessor:
             self.processed_messages.add(message.msg_id)
             self.processed_messages.add(duplicate_key)
             
-            self._log_message(f"[Preset]{self.config.get_value('bot.myNickname', 'AI')}: {response}")
+            self._log_message(f"[ Preset ]{self.config.get_value('bot.myNickname', 'AI')}: {response}")
             
             if self.config.get_value('adb.autoSend', True):
                 delay = random.uniform(
@@ -304,7 +304,7 @@ class MessageProcessor:
     def _handle_response(self, response: str, original_message: MessageItem):
         """Handle generated response."""
         bot_name = self.config.get_value('bot.myNickname', 'AI')
-        self._log_message(f"[AI]{bot_name}: {response}")
+        self._log_message(f"[   AI   ]{bot_name}: {response}")
         
         if self.config.get_value('adb.autoSend', True):
             delay = random.uniform(
