@@ -76,6 +76,7 @@ htmlcov/
 # Temporary files
 tmp/
 temp/
+temp.*
 
 # Other
 PROJECT_PLANS.md

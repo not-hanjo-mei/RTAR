@@ -16,23 +16,22 @@ class ResponseGenerator:
     def __init__(self, config_manager: ConfigManager):
         """Initialize response generator."""
         self.config = config_manager
-        self.client: Optional[AsyncOpenAI] = None
-        self._setup_client()
+    def __init__(self, config_manager: ConfigManager):
+        """Initialize response generator."""
+        self.config = config_manager
+        # Client is now initialized per-request to handle thread-local event loops
     
-    def _setup_client(self):
-        """Setup OpenAI client with configuration."""
+    def _create_client(self) -> Optional[AsyncOpenAI]:
+        """Create OpenAI client with current configuration."""
         api_key = self.config.get_value('openai.apiKey')
         api_base = self.config.get_value('openai.apiBase')
         
         if api_key and api_base:
-            self.client = AsyncOpenAI(
+            return AsyncOpenAI(
                 api_key=api_key,
                 base_url=api_base
             )
-    
-    def reload_client(self):
-        """Reload client with new configuration."""
-        self._setup_client()
+        return None
     
     async def generate_response(self, 
                               message: str, 
@@ -41,17 +40,9 @@ class ResponseGenerator:
                               character_prompt: Optional[str] = None) -> str:
         """
         Generate AI response for a message.
-        
-        Args:
-            message: The message to respond to
-            username: Username of the sender
-            context: Recent message context
-            character_prompt: Custom character personality prompt
-            
-        Returns:
-            Generated response text
         """
-        if not self.client:
+        client = self._create_client()
+        if not client:
             return "[Error: OpenAI client not configured]"
         
         try:
@@ -64,27 +55,48 @@ class ResponseGenerator:
             # Get model configuration
             model = self.config.get_value('openai.model', 'free:QwQ-32B')
             temperature = self.config.get_value('openai.temperature', 0.7)
-            max_tokens = 500
+            # Increased token limit to allow reasoning models (like zai-glm-4.7) to finish thinking
+            max_tokens = 8192
             
             # Generate response
-            response = await self.client.chat.completions.create(
+            # Use 'async with' if client supported it, but AsyncOpenAI standard usage is direct for now 
+            # (or we manually close if needed, though httpx handles it mostly)
+            response = await client.chat.completions.create(
                 model=model,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
+                stream=False,
                 max_tokens=max_tokens,
                 temperature=temperature
             )
             
             # Extract and clean response
             content = response.choices[0].message.content
+            
+            # DEBUG LOGGING
+            import logging
+            logger = logging.getLogger(__name__)
+            try:
+                # Log full response structure to debug missing content
+                full_json = response.model_dump_json()
+                logger.debug(f"FULL RESPONSE DUMP: {full_json}")
+            except:
+                logger.debug(f"RAW CONTENT: {content}")
+            
             reply = (content or "").strip()
             reply = self._clean_response(reply, username)
             
+            if not reply and content:
+                logger.warning("Response became empty after cleaning! Check regex logic.")
+            
+            await client.close() # Explicitly close to be safe with loops
             return reply
             
         except Exception as e:
+            if client:
+                await client.close()
             return f"[Error: {str(e)[:50]}...]"
     
     def _build_system_prompt(self, username: str, custom_prompt: Optional[str] = None) -> str:
