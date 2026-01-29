@@ -61,6 +61,7 @@ RTAR features a modular, event-driven architecture:
 
 ```
 rtar/
+├── fix_adb_kbd.py              # ADB Keyboard fix script for BlueStacks Emulator
 ├── main.py                     # Application entry point
 ├── pyproject.toml              # Project dependencies
 ├── START.bat                   # Windows start script (cmd)
