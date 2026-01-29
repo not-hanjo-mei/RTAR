@@ -33,8 +33,7 @@ chcp 65001 > nul
 color
 
 echo Starting RTAR...
-echo Access http://localhost:7860/ui in your browser to use the web UI.
-echo Press Ctrl+C in this window to stop RTAR.
+echo Tip: Copy .env.example to .env to customize host/port
 REM Run the application
 .\.venv\Scripts\python.exe main.py
 

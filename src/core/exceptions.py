@@ -32,3 +32,7 @@ class TTSError(AIServiceError):
 
 class ASRError(AIServiceError):
     pass
+
+
+class AudioPlaybackError(RTARError):
+    pass

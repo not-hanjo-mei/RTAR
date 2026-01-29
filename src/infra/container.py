@@ -65,10 +65,16 @@ class Container:
 
         from src.services.ai.service import AIService
         from src.services.chat.service import ChatService
+        from src.services.device.audio_player import AudioPlayer
         from src.services.device.service import DeviceService
 
         ai_service = AIService(config.ai, self._event_bus)
         device_service = DeviceService(config.adb, self._event_bus)
+
+        if config.ai.tts.enabled:
+            audio_player = AudioPlayer()
+            ai_service.set_audio_player(audio_player)
+
         chat_service = ChatService(
             config=config,
             event_bus=self._event_bus,

@@ -1,9 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
+import os
 import sys
+from pathlib import Path
 
 import uvicorn
+import colorama
+from dotenv import load_dotenv
+
+load_dotenv()
+
+HOST = os.getenv("RTAR_HOST", "0.0.0.0")
+PORT = int(os.getenv("RTAR_PORT", "42069"))
 
 
 async def run_web() -> None:
@@ -19,8 +28,8 @@ async def run_web() -> None:
     uv_level = app_config.log_level.lower()
     config = uvicorn.Config(
         app,
-        host="0.0.0.0",
-        port=7860,
+        host=HOST,
+        port=PORT,
         log_level=uv_level,
     )
     server = uvicorn.Server(config)
@@ -56,13 +65,13 @@ async def run_with_ui() -> None:
     fastapi_app = create_app()
     gradio_app = create_ui()
 
-    app = gr.mount_gradio_app(fastapi_app, gradio_app, path="/ui", theme='CultriX/gradio-theme')
+    app = gr.mount_gradio_app(fastapi_app, gradio_app, path="/ui", theme="CultriX/gradio-theme")
 
     uv_level = app_config.log_level.lower()
     config = uvicorn.Config(
         app,
-        host="0.0.0.0",
-        port=7860,
+        host=HOST,
+        port=PORT,
         log_level=uv_level,
     )
     server = uvicorn.Server(config)
@@ -76,6 +85,14 @@ def main() -> None:
         elif "--no-ui" in sys.argv:
             asyncio.run(run_web())
         else:
+            print(
+                colorama.Fore.GREEN
+                + f"Access http://localhost:{PORT}/ui in your browser to use the web UI."
+                + "\n"
+                + "This may take a few moments to start up."
+                + "\n"
+                + "Press Ctrl+C in this window to stop RTAR."
+                + colorama.Style.RESET_ALL)
             asyncio.run(run_with_ui())
     except KeyboardInterrupt:
         pass

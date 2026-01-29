@@ -6,9 +6,10 @@ from src.core.models.config import AIServicesConfig
 from src.core.models.events import EventType
 from src.services.ai.asr import ASRClient
 from src.services.ai.llm import LLMClient
-from src.services.ai.tts import TTSClient, VoiceType
+from src.services.ai.tts import TTSClient
 
 logger = logging.getLogger(__name__)
+
 
 DEFAULT_CHARACTER_PATH = Path("config/character.md")
 
@@ -18,9 +19,17 @@ class AIService:
         self._config = config
         self._event_bus = event_bus
         self._llm = LLMClient(config.llm)
-        self._tts = TTSClient(config.get_tts_config())
-        self._asr = ASRClient(config.get_asr_config())
+        self._tts = TTSClient(config.get_tts_endpoint())
+        self._asr = ASRClient(config.get_asr_endpoint())
         self._character_prompt: str | None = None
+        self._audio_player = None
+
+    def set_audio_player(self, player) -> None:
+        from src.services.device.audio_player import AudioPlayer
+
+        if not isinstance(player, AudioPlayer):
+            raise TypeError("player must be an AudioPlayer instance")
+        self._audio_player = player
 
     def load_character(self, path: Path = DEFAULT_CHARACTER_PATH) -> str:
         if path.exists():
@@ -69,14 +78,23 @@ class AIService:
         self,
         text: str,
         *,
-        voice: VoiceType = "alloy",
+        model: str | None = None,
+        voice: str = "alloy",
         speed: float = 1.0,
+        instructions: str | None = None,
+        play: bool = False,
+        volume: float = 1.0,
     ) -> bytes:
         await self._event_bus.publish(EventType.TTS_REQUEST, {"text": text})
 
-        audio = await self._tts.synthesize(text, voice=voice, speed=speed)
+        audio = await self._tts.synthesize(
+            text, model=model, voice=voice, speed=speed, instructions=instructions
+        )
 
         await self._event_bus.publish(EventType.TTS_COMPLETE, {"text": text})
+
+        if play and self._audio_player:
+            self._audio_player.play_audio(audio, volume=volume)
 
         return audio
 
@@ -98,3 +116,5 @@ class AIService:
         await self._llm.close()
         await self._tts.close()
         await self._asr.close()
+        if self._audio_player:
+            self._audio_player.close()

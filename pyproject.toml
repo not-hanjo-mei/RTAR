@@ -1,10 +1,11 @@
 [project]
 name = "rtar"
+version = "0.0.1"
 description = "RTAR (REALITY Auto Reply Tool) - AI-powered automated chat system for REALITY App live streams"
 requires-python = ">=3.11"
 readme = "README.md"
 license = { text = "AGPL-3.0-or-later" }
-authors = [{ name = "RTAR Team" }]
+authors = [{ name = "Hanjo Mei" }]
 
 dependencies = [
     # Core async framework
@@ -34,6 +35,10 @@ dependencies = [
     # Utilities
     "httpx>=0.27.0",
     "aiofiles>=23.0.0",
+    "python-dotenv>=1.0.0",
+
+    # Audio playback
+    "pygame>=2.5.0",
 ]
 
 [project.optional-dependencies]

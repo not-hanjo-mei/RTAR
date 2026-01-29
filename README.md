@@ -14,7 +14,8 @@ AI-powered automated chat system for REALITY App live streams.
 - **REST API**: Full HTTP API for programmatic control
 - **Gradio WebUI**: User-friendly web interface for monitoring and configuration
 - **Pure Async**: Architecture built on asyncio for high performance
-- **Extensible**: TTS/ASR interfaces ready for future integration
+- **Text-to-Speech (TTS)**: Bot can speak responses with configurable voices and per-response-type control
+
 
 ## Architecture
 
@@ -141,7 +142,7 @@ cp config/character.md.example config/character.md
 # Run the application
 python main.py
 
-# WebUI available at: http://localhost:7860/ui
+# WebUI available at: http://localhost:42069/ui
 ```
 
 ### Configuration
@@ -177,7 +178,18 @@ bot:
   response_rate: 1.0
   context_length: 20
 
+ai:
+  tts:
+    enabled: false          # Enable TTS for bot responses
+    voice: "alloy"          # Voice: alloy, echo, fable, onyx, nova, shimmer
+    volume: 1.0             # Volume (0.0-1.0)
+    response_types:
+      - "chat"              # TTS enabled for chat responses
+      # - "gift"            # Enable for gift responses
+      # - "like"            # Enable for like responses
+      # - "follow"          # Enable for follow responses
 log_level: "WARNING"
+
 ```
 
 ### ADB Setup
@@ -199,15 +211,15 @@ adb shell input tap 540 1800  # Test tap
 
 ### Web Application
 
-Start the web server (default port 7860):
+Start the web server (default port 42069):
 
 ```bash
 python main.py
 ```
 
 Access:
-- **API Docs**: http://localhost:7860/docs
-- **Gradio UI**: http://localhost:7860/ui
+- **API Docs**: http://localhost:42069/docs
+- **Gradio UI**: http://localhost:42069/ui
 
 ### MCP Server
 
@@ -264,7 +276,9 @@ POST /api/v1/ai/generate
 POST /api/v1/ai/tts
 {
   "text": "Hello world!",
-  "voice": "alloy"
+  "voice": "alloy",
+  "play": true,         # Optional: Play audio locally on server (default: false)
+  "volume": 1.0         # Optional: Volume (0.0-1.0, default: 1.0)
 }
 
 # Speech to Text
@@ -274,6 +288,7 @@ POST /api/v1/ai/asr
   "language": "en"
 }
 ```
+
 
 #### Device Endpoints
 
@@ -422,17 +437,49 @@ ai:
   llm:
     api_base: "https://api.openai.com/v1"
     model: "gpt-4o"
-  
+
   tts:  # Optional, inherits from llm if not set
     api_base: "https://different-endpoint.com/v1"
     model: "tts-1"
-  
+
   asr:  # Optional, inherits from llm if not set
     api_base: "https://another-endpoint.com/v1"
     model: "whisper-1"
 ```
 
+### TTS Configuration
+
+Enable Text-to-Speech for bot responses:
+
+```yaml
+ai:
+  tts:
+    enabled: true          # Enable bot TTS
+    voice: "alloy"          # Voice selection
+    volume: 1.0             # Audio volume (0.0-1.0)
+    response_types:         # Which response types to speak
+      - "chat"             # Chat messages from viewers
+      - "gift"             # Gift responses
+      - "like"             # Like responses
+      - "follow"           # Follow responses
+```
+
+**Available Voices:**
+- `alloy` (default)
+- `echo`
+- `fable`
+- `onyx`
+- `nova`
+- `shimmer`
+
+**TTS Playback:**
+- Bot automatically speaks responses when `ai.tts.enabled: true`
+- Audio plays locally on the host machine
+- Configure per-response-type control (e.g., only speak chat messages, not likes)
+- Test TTS via the Gradio UI "TTS Test" tab at `http://localhost:42069/ui`
+
 ## Troubleshooting
+
 
 ### Connection Issues
 
@@ -468,6 +515,17 @@ adb connect IP:5555  # Connect
 - Ensure messages pass type filter (text/join/like/gift/follow)
 - Check if bot's own messages are being filtered
 - **Note**: Messages received when connection starts are filtered if older than bot start time - this is expected behavior
+
+### TTS Not Playing
+
+- Verify `ai.tts.enabled: true` in config.yaml
+- Check that TTS endpoint is configured (inherits from LLM if separate TTS endpoint not set)
+- Ensure the response type is in `ai.tts.response_types` list
+- Check pygame is installed: `pip list | grep pygame`
+- Verify audio output on host machine is working
+- Check logs for TTS errors with `log_level: "DEBUG"`
+- Test TTS manually via the "TTS Test" tab in Gradio UI
+
 
 ## License
 

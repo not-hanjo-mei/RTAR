@@ -9,7 +9,9 @@ def create_config_panel() -> gr.Blocks:
 
         with gr.Tabs():
             with gr.Tab("REALITY Settings"):
-                media_id = gr.Number(label="Media ID", precision=0, minimum=100000000, maximum=999999999)
+                media_id = gr.Number(
+                    label="Media ID", precision=0, minimum=100000000, maximum=999999999
+                )
                 vlive_id = gr.Textbox(label="VLive ID", type="password")
                 gid = gr.Textbox(label="GID (Group ID)", type="password")
                 auth = gr.Textbox(label="Auth Token (Bearer ...)", type="password")
@@ -52,25 +54,64 @@ def create_config_panel() -> gr.Blocks:
                     label="Temperature",
                     minimum=0.0,
                     maximum=2.0,
-                    step=0.1,
+                    step=0.01,
                     value=0.7,
                 )
 
                 save_ai_btn = gr.Button("Save AI Settings")
 
+            with gr.Tab("TTS Settings"):
+                tts_enabled = gr.Checkbox(label="Enable TTS", value=False)
+                tts_model = gr.Dropdown(
+                    label="Model",
+                    choices=["tts-1", "tts-1-hd", "gpt-4o-mini-tts"],
+                    value="tts-1",
+                )
+                tts_api_base = gr.Textbox(
+                    label="API Base URL (Optional)", placeholder="Leave empty to use LLM endpoint"
+                )
+                tts_api_key = gr.Textbox(
+                    label="API Key (Optional)",
+                    type="password",
+                    placeholder="Leave empty to use LLM API key",
+                )
+                tts_voice = gr.Textbox(label="Voice", value="alloy")
+                tts_speed = gr.Slider(
+                    label="Speed",
+                    minimum=0.25,
+                    maximum=4.0,
+                    step=0.05,
+                    value=1.0,
+                )
+                tts_volume = gr.Slider(
+                    label="Volume",
+                    minimum=0.0,
+                    maximum=1.0,
+                    step=0.1,
+                    value=1.0,
+                )
+                tts_instructions = gr.Textbox(
+                    label="Instructions (Optional)",
+                    placeholder="e.g., Speak in a cheerful tone...",
+                    info="Only works with gpt-4o-mini-tts",
+                )
+                tts_response_types = gr.CheckboxGroup(
+                    label="Speak on Response Types",
+                    choices=["chat", "gift", "like", "follow", "join", "fallback", "manual"],
+                    value=["chat"],
+                )
+
+                save_tts_btn = gr.Button("Save TTS Settings")
+
             with gr.Tab("Character"):
                 character_text = gr.Code(
-                    label="Character Definition (character.md)",
-                    language="markdown",
-                    lines=20
+                    label="Character Definition (character.md)", language="markdown", lines=20
                 )
                 save_character_btn = gr.Button("Save Character", variant="primary")
 
             with gr.Tab("Presets"):
                 presets_text = gr.Code(
-                    label="Preset Responses (presets.yaml)",
-                    language="yaml",
-                    lines=20
+                    label="Preset Responses (presets.yaml)", language="yaml", lines=20
                 )
                 save_presets_btn = gr.Button("Save Presets", variant="primary")
 
@@ -86,6 +127,7 @@ def create_config_panel() -> gr.Blocks:
                 bot = config.get("bot", {})
                 adb = config.get("adb", {})
                 ai = config.get("ai", {}).get("llm", {})
+                tts = config.get("ai", {}).get("tts", {})
 
                 return (
                     reality.get("media_id", 0),
@@ -106,6 +148,15 @@ def create_config_panel() -> gr.Blocks:
                     ai.get("api_key", ""),
                     ai.get("model", ""),
                     ai.get("temperature", 0.7),
+                    tts.get("enabled", False),
+                    tts.get("model", "tts-1"),
+                    tts.get("api_base", ""),
+                    tts.get("api_key", ""),
+                    tts.get("voice", "alloy"),
+                    tts.get("speed", 1.0),
+                    tts.get("volume", 1.0),
+                    tts.get("instructions", ""),
+                    list(tts.get("response_types", ["chat"])),
                     character_data.get("content", ""),
                     presets_data.get("content", ""),
                 )
@@ -129,6 +180,15 @@ def create_config_panel() -> gr.Blocks:
                     "",
                     "",
                     0.7,
+                    False,
+                    "tts-1",
+                    "",
+                    "",
+                    "alloy",
+                    1.0,
+                    1.0,
+                    "",
+                    ["chat"],
                     "",
                     "",
                 )
@@ -173,6 +233,25 @@ def create_config_panel() -> gr.Blocks:
             except Exception as e:
                 return f"Error: {e}"
 
+        async def save_tts_settings(
+            enabled, model, api_base, api_key, voice, speed, volume, instructions, response_types
+        ):
+            try:
+                await api_put("/config/", {"key": "ai.tts.enabled", "value": enabled})
+                await api_put("/config/", {"key": "ai.tts.model", "value": model})
+                await api_put("/config/", {"key": "ai.tts.api_base", "value": api_base})
+                await api_put("/config/", {"key": "ai.tts.api_key", "value": api_key})
+                await api_put("/config/", {"key": "ai.tts.voice", "value": voice})
+                await api_put("/config/", {"key": "ai.tts.speed", "value": speed})
+                await api_put("/config/", {"key": "ai.tts.volume", "value": volume})
+                await api_put("/config/", {"key": "ai.tts.instructions", "value": instructions})
+                await api_put(
+                    "/config/", {"key": "ai.tts.response_types", "value": set(response_types)}
+                )
+                return "TTS settings saved! Restart required for changes to take effect."
+            except Exception as e:
+                return f"Error: {e}"
+
         async def save_character_content(content):
             try:
                 await api_post("/config/files/character", {"content": content})
@@ -208,6 +287,15 @@ def create_config_panel() -> gr.Blocks:
                 api_key,
                 model,
                 temperature,
+                tts_enabled,
+                tts_model,
+                tts_api_base,
+                tts_api_key,
+                tts_voice,
+                tts_speed,
+                tts_volume,
+                tts_instructions,
+                tts_response_types,
                 character_text,
                 presets_text,
             ],
@@ -234,6 +322,22 @@ def create_config_panel() -> gr.Blocks:
         save_ai_btn.click(
             save_ai_settings,
             inputs=[api_base, api_key, model, temperature],
+            outputs=[result_text],
+        )
+
+        save_tts_btn.click(
+            save_tts_settings,
+            inputs=[
+                tts_enabled,
+                tts_model,
+                tts_api_base,
+                tts_api_key,
+                tts_voice,
+                tts_speed,
+                tts_volume,
+                tts_instructions,
+                tts_response_types,
+            ],
             outputs=[result_text],
         )
 

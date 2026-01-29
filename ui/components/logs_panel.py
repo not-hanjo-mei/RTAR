@@ -23,7 +23,7 @@ def create_logs_panel() -> gr.Blocks:
         )
 
         def refresh_logs(level: str):
-            return f"Logs will be displayed here when the application is running.\nFilter: {level}\n\nConnect to WebSocket at ws://localhost:7860/ws/events for real-time updates."
+            return f"Logs will be displayed here when the application is running.\nFilter: {level}\n\nConnect to WebSocket at ws://localhost:42069/ws/events for real-time updates."
 
         def clear_logs():
             return ""

@@ -1,6 +1,11 @@
-import httpx
+import os
 
-API_BASE = "http://localhost:7860/api/v1"
+import httpx
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_BASE = f"http://localhost:{os.getenv('RTAR_PORT', '42069')}/api/v1"
 
 
 class APIError(Exception):

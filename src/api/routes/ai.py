@@ -20,7 +20,12 @@ class GenerateResponse(BaseModel):
 
 class TTSRequest(BaseModel):
     text: str
+    model: str = "tts-1"
     voice: str = "alloy"
+    speed: float = 1.0
+    instructions: str | None = None
+    play: bool = False
+    volume: float = 1.0
 
 
 class TTSResponse(BaseModel):
@@ -54,7 +59,12 @@ async def generate_response(request: GenerateRequest, container: ContainerDep) -
 async def text_to_speech(request: TTSRequest, container: ContainerDep) -> TTSResponse:
     audio = await container.services.ai.text_to_speech(
         text=request.text,
-        voice=request.voice,  # type: ignore
+        model=request.model,
+        voice=request.voice,
+        speed=request.speed,
+        instructions=request.instructions,
+        play=request.play,
+        volume=request.volume,
     )
     return TTSResponse(audio_base64=base64.b64encode(audio).decode())
 

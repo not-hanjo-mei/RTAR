@@ -1,5 +1,4 @@
 import logging
-from typing import Literal
 
 from openai import AsyncOpenAI
 
@@ -7,8 +6,6 @@ from src.core.exceptions import TTSError
 from src.core.models.config import AIEndpointConfig
 
 logger = logging.getLogger(__name__)
-
-VoiceType = Literal["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
 
 
 class TTSClient:
@@ -30,16 +27,23 @@ class TTSClient:
         self,
         text: str,
         *,
-        voice: VoiceType = "alloy",
+        model: str | None = None,
+        voice: str = "alloy",
         speed: float = 1.0,
+        instructions: str | None = None,
     ) -> bytes:
         try:
-            response = await self.client.audio.speech.create(
-                model=self._config.model,
-                voice=voice,
-                input=text,
-                speed=speed,
-            )
+            params = {
+                "model": model or self._config.model,
+                "voice": voice,
+                "input": text,
+                "speed": speed,
+            }
+
+            if instructions:
+                params["instructions"] = instructions
+
+            response = await self.client.audio.speech.create(**params)
 
             return response.content
 

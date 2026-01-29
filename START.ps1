@@ -33,8 +33,7 @@ if (-not (Test-Path $venvPath)) {
 }
 
 Write-Host "Starting RTAR..." -ForegroundColor Green
-Write-Host "Access http://localhost:7860/ui in your browser to use the web UI." -ForegroundColor Green
-Write-Host "Press Ctrl+C in this window to stop RTAR." -ForegroundColor Green
+Write-Host "Tip: Copy .env.example to .env to customize host/port" -ForegroundColor Gray
 
 # Run the application directly from venv
 try {

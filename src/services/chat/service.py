@@ -90,6 +90,25 @@ class ChatService:
         self._context.add_message(bot_msg)
         logger.debug(f"[Context] Added bot response: {response[:50]}...")
 
+    async def _speak_response(self, response: str, response_type: str = "chat") -> None:
+        if not self._config.ai.tts.enabled:
+            return
+
+        if response_type not in self._config.ai.tts.response_types:
+            logger.debug(f"[TTS] Skipping TTS for response type: {response_type}")
+            return
+
+        try:
+            await self._ai_service.text_to_speech(
+                response,
+                voice=self._config.ai.tts.voice,
+                play=True,
+                volume=self._config.ai.tts.volume,
+            )
+            logger.debug(f"[TTS] Spoke response: {response[:50]}...")
+        except Exception as e:
+            logger.error(f"[TTS] Failed to speak response: {e}")
+
     async def _on_message(self, data: dict[str, Any]) -> None:
         message = self._processor.parse_message(data)
         if message is None:
@@ -137,6 +156,7 @@ class ChatService:
 
             await self._device_service.queue_message(response)
             self._add_bot_response_to_context(response)
+            await self._speak_response(response, "chat")
 
         except Exception as e:
             logger.error(f"Failed to generate response: {e}, using fallback")
@@ -148,6 +168,7 @@ class ChatService:
             if fallback:
                 await self._device_service.queue_message(fallback)
                 self._add_bot_response_to_context(fallback)
+                await self._speak_response(fallback, "fallback")
 
     async def _send_preset_response(self, message: ChatMessage) -> None:
         response = self._presets.get_by_type(message.message_type, message.display_name)
@@ -164,11 +185,13 @@ class ChatService:
 
         await self._device_service.queue_message(response)
         self._add_bot_response_to_context(response)
+        await self._speak_response(response, message.message_type.value)
 
     async def send_message(self, text: str) -> bool:
         success = await self._device_service.send_immediate(text)
         if success:
             self._add_bot_response_to_context(text)
+            await self._speak_response(text, "manual")
         return success
 
     def get_stats(self) -> dict[str, Any]:
