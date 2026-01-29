@@ -63,6 +63,8 @@ RTAR features a modular, event-driven architecture:
 rtar/
 ├── main.py                     # Application entry point
 ├── pyproject.toml              # Project dependencies
+├── START.bat                   # Windows start script (cmd)
+├── START.ps1                   # Windows start script (PowerShell)
 ├── config/
 │   ├── config.yaml             # Configuration file
 │   ├── character.md            # AI personality definition
