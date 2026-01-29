@@ -1,0 +1,35 @@
+reality:
+  media_id: 123456789
+  vlive_id: "your-vlive-id"
+  gid: "your-gid"
+  auth: "Bearer your-token"
+
+ai:
+  llm:
+    api_base: "https://api.openai.com/v1"
+    api_key: "sk-xxx"
+    model: "gpt-4o"
+    temperature: 0.7
+    max_tokens: 8192
+    timeout: 30
+
+  tts:
+
+  asr:
+
+adb:
+  host: "127.0.0.1"
+  port: 5555
+  input_box: [540, 1800] # [x, y]
+  send_button: [980, 1800] # [x, y]
+  auto_send: true
+  send_delay: [1.0, 3.0] # [min_seconds, max_seconds]
+
+bot:
+  nickname: "RTAR Assistant"
+  response_rate: 1.0
+  context_length: 20
+  vlive_id: "bots-vlive-id-or-fallback-to-reality.vlive_id"
+
+# Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+log_level: "WARNING"

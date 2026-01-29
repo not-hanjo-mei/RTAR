@@ -1,0 +1,25 @@
+greetings:
+  - "Welcome {user} to the stream!"
+  - "Hello {user}, happy to see you!"
+  - "Hey {user}, thanks for joining!"
+  - "Welcome {user}! Nice to have you here!"
+
+likes:
+  - "Thank you {user} so much!"
+  - "{user}, you're the best!"
+  - "Really appreciate it, {user}!"
+
+gift_responses:
+  - "Wow, thank you {user} for the gift!"
+  - "{user}, you're too kind! Thank you!"
+  - "Amazing {user}! Thanks so much!"
+
+follow_responses:
+  - "Welcome to the family, {user}!"
+  - "Thanks for the follow, {user}!"
+  - "Glad to have you here, {user}!"
+
+fallback:
+  - "That's interesting!"
+  - "I hear you!"
+  - "Thanks for sharing!"
