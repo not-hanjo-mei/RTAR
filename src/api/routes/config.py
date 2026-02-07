@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,10 @@ PRESETS_PATH = Path("config/presets.yaml")
 class SetConfigRequest(BaseModel):
     key: str
     value: Any
+
+
+class BatchConfigRequest(BaseModel):
+    updates: dict[str, Any]
 
 
 class FileContentRequest(BaseModel):
@@ -40,7 +45,18 @@ async def get_config_section(section: str, container: ContainerDep) -> dict[str,
 @router.put("/")
 async def update_config(request: SetConfigRequest, container: ContainerDep) -> dict[str, bool]:
     container.config_manager.update(request.key, request.value)
-    container.config_manager.save()
+    await container.config_manager.save_async()
+    return {"success": True}
+
+
+@router.put("/batch")
+async def update_config_batch(
+    request: BatchConfigRequest, container: ContainerDep
+) -> dict[str, bool]:
+    """Batch update multiple config values in a single save operation."""
+    for key, value in request.updates.items():
+        container.config_manager.update(key, value)
+    await container.config_manager.save_async()
     return {"success": True}
 
 
@@ -75,26 +91,28 @@ async def get_system_status(container: ContainerDep) -> SystemStatusResponse:
 @router.get("/files/character")
 async def get_character() -> dict[str, str]:
     if CHARACTER_PATH.exists():
-        return {"content": CHARACTER_PATH.read_text(encoding="utf-8")}
+        content = await asyncio.to_thread(CHARACTER_PATH.read_text, encoding="utf-8")
+        return {"content": content}
     return {"content": ""}
 
 
 @router.post("/files/character")
 async def save_character(request: FileContentRequest) -> dict[str, bool]:
-    CHARACTER_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CHARACTER_PATH.write_text(request.content, encoding="utf-8")
+    await asyncio.to_thread(CHARACTER_PATH.parent.mkdir, parents=True, exist_ok=True)
+    await asyncio.to_thread(CHARACTER_PATH.write_text, request.content, encoding="utf-8")
     return {"success": True}
 
 
 @router.get("/files/presets")
 async def get_presets() -> dict[str, str]:
     if PRESETS_PATH.exists():
-        return {"content": PRESETS_PATH.read_text(encoding="utf-8")}
+        content = await asyncio.to_thread(PRESETS_PATH.read_text, encoding="utf-8")
+        return {"content": content}
     return {"content": ""}
 
 
 @router.post("/files/presets")
 async def save_presets(request: FileContentRequest) -> dict[str, bool]:
-    PRESETS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    PRESETS_PATH.write_text(request.content, encoding="utf-8")
+    await asyncio.to_thread(PRESETS_PATH.parent.mkdir, parents=True, exist_ok=True)
+    await asyncio.to_thread(PRESETS_PATH.write_text, request.content, encoding="utf-8")
     return {"success": True}

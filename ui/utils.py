@@ -7,6 +7,26 @@ load_dotenv()
 
 API_BASE = f"http://localhost:{os.getenv('RTAR_PORT', '42069')}/api/v1"
 
+_client: httpx.AsyncClient | None = None
+
+
+def _get_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None or _client.is_closed:
+        _client = httpx.AsyncClient(
+            base_url=API_BASE,
+            timeout=60.0,
+            limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+        )
+    return _client
+
+
+async def close_client() -> None:
+    global _client
+    if _client and not _client.is_closed:
+        await _client.aclose()
+        _client = None
+
 
 class APIError(Exception):
     def __init__(self, status_code: int, detail: str):
@@ -30,24 +50,24 @@ def _handle_response(response: httpx.Response) -> dict:
 
 
 async def api_get(path: str) -> dict:
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.get(f"{API_BASE}{path}")
-        return _handle_response(response)
+    client = _get_client()
+    response = await client.get(path)
+    return _handle_response(response)
 
 
 async def api_post(path: str, data: dict | None = None) -> dict:
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.post(f"{API_BASE}{path}", json=data or {})
-        return _handle_response(response)
+    client = _get_client()
+    response = await client.post(path, json=data or {})
+    return _handle_response(response)
 
 
 async def api_put(path: str, data: dict) -> dict:
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.put(f"{API_BASE}{path}", json=data)
-        return _handle_response(response)
+    client = _get_client()
+    response = await client.put(path, json=data)
+    return _handle_response(response)
 
 
 async def api_delete(path: str) -> dict:
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.delete(f"{API_BASE}{path}")
-        return _handle_response(response)
+    client = _get_client()
+    response = await client.delete(path)
+    return _handle_response(response)

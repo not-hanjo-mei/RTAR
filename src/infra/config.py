@@ -1,8 +1,9 @@
+import asyncio
 from pathlib import Path
 from typing import Any
 
-from ruamel.yaml import YAML
 from pydantic import ValidationError
+from ruamel.yaml import YAML
 
 from src.core.exceptions import ConfigError
 from src.core.models.config import AppConfig
@@ -72,6 +73,11 @@ class ConfigManager:
     def save(self) -> None:
         if self._config:
             save_config(self._config, self._path)
+
+    async def save_async(self) -> None:
+        """Async version of save that runs in a thread pool to avoid blocking."""
+        if self._config:
+            await asyncio.to_thread(save_config, self._config, self._path)
 
     def update(self, key: str, value: Any) -> None:
         parts = key.split(".")

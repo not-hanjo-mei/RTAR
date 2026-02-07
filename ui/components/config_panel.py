@@ -1,3 +1,5 @@
+import asyncio
+
 import gradio as gr
 
 from ui.utils import api_get, api_post, api_put
@@ -119,9 +121,11 @@ def create_config_panel() -> gr.Blocks:
 
         async def load_config():
             try:
-                config = await api_get("/config/")
-                character_data = await api_get("/config/files/character")
-                presets_data = await api_get("/config/files/presets")
+                config, character_data, presets_data = await asyncio.gather(
+                    api_get("/config/"),
+                    api_get("/config/files/character"),
+                    api_get("/config/files/presets"),
+                )
 
                 reality = config.get("reality", {})
                 bot = config.get("bot", {})
@@ -195,40 +199,68 @@ def create_config_panel() -> gr.Blocks:
 
         async def save_reality_settings(mid, vid, g, a):
             try:
-                await api_put("/config/", {"key": "reality.media_id", "value": int(mid)})
-                await api_put("/config/", {"key": "reality.vlive_id", "value": vid})
-                await api_put("/config/", {"key": "reality.gid", "value": g})
-                await api_put("/config/", {"key": "reality.auth", "value": a})
+                await api_put(
+                    "/config/batch",
+                    {
+                        "updates": {
+                            "reality.media_id": int(mid),
+                            "reality.vlive_id": vid,
+                            "reality.gid": g,
+                            "reality.auth": a,
+                        }
+                    },
+                )
                 return "REALITY settings saved!"
             except Exception as e:
                 return f"Error: {e}"
 
         async def save_bot_settings(nick, rate, ctx_len):
             try:
-                await api_put("/config/", {"key": "bot.nickname", "value": nick})
-                await api_put("/config/", {"key": "bot.response_rate", "value": rate})
-                await api_put("/config/", {"key": "bot.context_length", "value": int(ctx_len)})
+                await api_put(
+                    "/config/batch",
+                    {
+                        "updates": {
+                            "bot.nickname": nick,
+                            "bot.response_rate": rate,
+                            "bot.context_length": int(ctx_len),
+                        }
+                    },
+                )
                 return "Bot settings saved!"
             except Exception as e:
                 return f"Error: {e}"
 
         async def save_adb_settings(host, port, auto, ix, iy, sx, sy):
             try:
-                await api_put("/config/", {"key": "adb.host", "value": host})
-                await api_put("/config/", {"key": "adb.port", "value": int(port)})
-                await api_put("/config/", {"key": "adb.auto_send", "value": auto})
-                await api_put("/config/", {"key": "adb.input_box", "value": [int(ix), int(iy)]})
-                await api_put("/config/", {"key": "adb.send_button", "value": [int(sx), int(sy)]})
+                await api_put(
+                    "/config/batch",
+                    {
+                        "updates": {
+                            "adb.host": host,
+                            "adb.port": int(port),
+                            "adb.auto_send": auto,
+                            "adb.input_box": [int(ix), int(iy)],
+                            "adb.send_button": [int(sx), int(sy)],
+                        }
+                    },
+                )
                 return "ADB settings saved!"
             except Exception as e:
                 return f"Error: {e}"
 
         async def save_ai_settings(base, key, mdl, temp):
             try:
-                await api_put("/config/", {"key": "ai.llm.api_base", "value": base})
-                await api_put("/config/", {"key": "ai.llm.api_key", "value": key})
-                await api_put("/config/", {"key": "ai.llm.model", "value": mdl})
-                await api_put("/config/", {"key": "ai.llm.temperature", "value": temp})
+                await api_put(
+                    "/config/batch",
+                    {
+                        "updates": {
+                            "ai.llm.api_base": base,
+                            "ai.llm.api_key": key,
+                            "ai.llm.model": mdl,
+                            "ai.llm.temperature": temp,
+                        }
+                    },
+                )
                 return "AI settings saved!"
             except Exception as e:
                 return f"Error: {e}"
@@ -237,16 +269,21 @@ def create_config_panel() -> gr.Blocks:
             enabled, model, api_base, api_key, voice, speed, volume, instructions, response_types
         ):
             try:
-                await api_put("/config/", {"key": "ai.tts.enabled", "value": enabled})
-                await api_put("/config/", {"key": "ai.tts.model", "value": model})
-                await api_put("/config/", {"key": "ai.tts.api_base", "value": api_base})
-                await api_put("/config/", {"key": "ai.tts.api_key", "value": api_key})
-                await api_put("/config/", {"key": "ai.tts.voice", "value": voice})
-                await api_put("/config/", {"key": "ai.tts.speed", "value": speed})
-                await api_put("/config/", {"key": "ai.tts.volume", "value": volume})
-                await api_put("/config/", {"key": "ai.tts.instructions", "value": instructions})
                 await api_put(
-                    "/config/", {"key": "ai.tts.response_types", "value": set(response_types)}
+                    "/config/batch",
+                    {
+                        "updates": {
+                            "ai.tts.enabled": enabled,
+                            "ai.tts.model": model,
+                            "ai.tts.api_base": api_base,
+                            "ai.tts.api_key": api_key,
+                            "ai.tts.voice": voice,
+                            "ai.tts.speed": speed,
+                            "ai.tts.volume": volume,
+                            "ai.tts.instructions": instructions,
+                            "ai.tts.response_types": set(response_types),
+                        }
+                    },
                 )
                 return "TTS settings saved! Restart required for changes to take effect."
             except Exception as e:

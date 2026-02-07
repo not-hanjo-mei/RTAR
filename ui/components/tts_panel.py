@@ -2,6 +2,7 @@ import gradio as gr
 
 from ui.utils import api_post
 
+
 def create_tts_panel() -> gr.Blocks:
     with gr.Blocks() as tts_panel:
         gr.Markdown("## Text-to-Speech Test")

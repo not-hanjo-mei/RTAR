@@ -27,7 +27,7 @@ if not exist ".venv" (
         exit /b 1
     )
 )
-
+echo Starting RTAR...
 REM Set console encoding
 chcp 65001 > nul
 color
