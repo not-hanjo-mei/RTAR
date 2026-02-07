@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -68,8 +69,10 @@ class Container:
         from src.services.device.audio_player import AudioPlayer
         from src.services.device.service import DeviceService
 
-        ai_service = AIService(config.ai, self._event_bus)
-        device_service = DeviceService(config.adb, self._event_bus)
+        ai_service, device_service = await asyncio.gather(
+            asyncio.to_thread(AIService, config.ai, self._event_bus),
+            asyncio.to_thread(DeviceService, config.adb, self._event_bus),
+        )
 
         if config.ai.tts.enabled:
             audio_player = AudioPlayer()

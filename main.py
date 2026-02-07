@@ -51,20 +51,20 @@ async def run_mcp() -> None:
 
 
 async def run_with_ui() -> None:
-    import gradio as gr
-
     from pathlib import Path
 
     from src.api.app import create_app
     from src.infra.config import load_config
-    from ui.app import create_ui
 
     config_path = Path("config/config.yaml")
     app_config = load_config(config_path)
 
     fastapi_app = create_app()
-    gradio_app = create_ui()
 
+    import gradio as gr
+    from ui.app import create_ui
+
+    gradio_app = create_ui()
     app = gr.mount_gradio_app(fastapi_app, gradio_app, path="/ui", theme="CultriX/gradio-theme")
 
     uv_level = app_config.log_level.lower()
@@ -92,7 +92,8 @@ def main() -> None:
                 + "This may take a few moments to start up."
                 + "\n"
                 + "Press Ctrl+C in this window to stop RTAR."
-                + colorama.Style.RESET_ALL)
+                + colorama.Style.RESET_ALL
+            )
             asyncio.run(run_with_ui())
     except KeyboardInterrupt:
         pass
