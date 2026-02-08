@@ -14,6 +14,7 @@ from src.core.models.config import RealityConfig
 logger = logging.getLogger(__name__)
 
 MessageCallback = Callable[[dict[str, Any]], Coroutine[Any, Any, None]]
+DisconnectCallback = Callable[[int, str], Coroutine[Any, Any, None]]
 
 
 class RealityWebSocket:
@@ -26,10 +27,16 @@ class RealityWebSocket:
         self._ws: WebSocketClientProtocol | None = None
         self._running = False
         self._message_callback: MessageCallback | None = None
+        self._disconnect_callback: DisconnectCallback | None = None
         self._receive_task: asyncio.Task[None] | None = None
+        self._close_code: int | None = None
+        self._close_reason: str = ""
 
     def set_message_callback(self, callback: MessageCallback) -> None:
         self._message_callback = callback
+
+    def set_disconnect_callback(self, callback: DisconnectCallback) -> None:
+        self._disconnect_callback = callback
 
     def _build_url(self) -> str:
         return f"{self.REALITY_WS_URL}?media_id={self._config.media_id}"
@@ -134,6 +141,10 @@ class RealityWebSocket:
                 logger.warning(f"WebSocket connection closed: code={e.code}, reason={e.reason}")
                 self._running = False
                 self._ws = None
+                self._close_code = e.code
+                self._close_reason = e.reason
+                if self._disconnect_callback:
+                    asyncio.create_task(self._disconnect_callback(e.code, e.reason))
                 break
             except Exception as e:
                 logger.error(f"Receive error: {e}", exc_info=True)
@@ -144,3 +155,11 @@ class RealityWebSocket:
     @property
     def is_connected(self) -> bool:
         return self._ws is not None and self._running
+
+    @property
+    def close_code(self) -> int | None:
+        return self._close_code
+
+    @property
+    def close_reason(self) -> str:
+        return self._close_reason

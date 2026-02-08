@@ -55,6 +55,7 @@ class ChatService:
         self._running = True
 
         self._websocket.set_message_callback(self._on_message)
+        self._websocket.set_disconnect_callback(self._on_disconnect)
 
         await self._websocket.connect()
         await self._device_service.connect()
@@ -108,6 +109,45 @@ class ChatService:
             logger.debug(f"[TTS] Spoke response: {response[:50]}...")
         except Exception as e:
             logger.error(f"[TTS] Failed to speak response: {e}")
+
+    async def _on_disconnect(self, code: int, reason: str) -> None:
+        logger.warning(f"[ChatService] WebSocket disconnected: code={code}, reason={reason}")
+
+        if not self._running:
+            return
+
+        permanent_codes = {4003, 4004, 4005, 1000, 1001}
+        if code in permanent_codes:
+            logger.info(f"[ChatService] Permanent disconnect (code={code}), stopping bot")
+            await self.stop()
+            return
+
+        logger.info("[ChatService] Connection lost, attempting to reconnect...")
+        await self._event_bus.publish(EventType.WS_DISCONNECTED, {"code": code, "reason": reason})
+
+        max_retries = 5
+        retry_delays = [2, 5, 10, 15, 30]
+
+        for attempt in range(max_retries):
+            if not self._running:
+                break
+
+            delay = retry_delays[min(attempt, len(retry_delays) - 1)]
+            logger.info(
+                f"[ChatService] Reconnect attempt {attempt + 1}/{max_retries} in {delay}s..."
+            )
+            await asyncio.sleep(delay)
+
+            try:
+                await self._websocket.connect()
+                logger.info("[ChatService] Reconnected successfully!")
+                await self._event_bus.publish(EventType.WS_CONNECTED, {})
+                return
+            except Exception as e:
+                logger.warning(f"[ChatService] Reconnect attempt {attempt + 1} failed: {e}")
+
+        logger.error("[ChatService] Failed to reconnect after all attempts, stopping bot")
+        await self.stop()
 
     async def _on_message(self, data: dict[str, Any]) -> None:
         message = self._processor.parse_message(data)
