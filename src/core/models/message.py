@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -22,7 +22,7 @@ class ChatMessage(BaseModel):
     display_name: str
     content: str
     message_type: MessageType = MessageType.TEXT
-    timestamp: datetime = Field(default_factory=datetime.now)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     raw_data: dict[str, Any] | None = None
 
     @property
